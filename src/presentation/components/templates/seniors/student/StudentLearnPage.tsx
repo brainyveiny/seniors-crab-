@@ -135,9 +135,34 @@ export function StudentLearnPage({
   subjects: SeniorsSubjectSummary[];
   student: StudentLearnMeta;
 }) {
-  const [selectedSubjectId, setSelectedSubjectId] = useState(subjects[0]?.id ?? "");
+  const resumeTarget = useMemo(() => {
+    const curriculumTopics = subjects.flatMap((subject) =>
+      subject.chapters.flatMap((chapter) =>
+        chapter.topics.map((topic) => ({
+          ...topic,
+          subjectId: subject.id,
+          subjectName: subject.name,
+          chapterId: chapter.id,
+          chapterName: chapter.name,
+        })),
+      ),
+    );
+
+    return (
+      curriculumTopics.find(
+        (topic) => topic.progressPercent > 0 && topic.progressPercent < 100,
+      ) ??
+      curriculumTopics.find((topic) => topic.progressPercent < 100) ??
+      curriculumTopics[0] ??
+      null
+    );
+  }, [subjects]);
+
+  const [selectedSubjectId, setSelectedSubjectId] = useState(
+    resumeTarget?.subjectId ?? subjects[0]?.id ?? "",
+  );
   const [selectedChapterId, setSelectedChapterId] = useState(
-    subjects[0]?.chapters[0]?.id ?? "",
+    resumeTarget?.chapterId ?? subjects[0]?.chapters[0]?.id ?? "",
   );
   const [query, setQuery] = useState("");
   const [showAllChapters, setShowAllChapters] = useState(false);
@@ -235,6 +260,44 @@ export function StudentLearnPage({
           variant="chip"
         />
       </div>
+
+      {resumeTarget ? (
+        <section className="flex flex-col gap-4 rounded-2xl border border-[var(--sp-border)] bg-[var(--sp-surface)] p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--sp-muted)]">
+              {resumeTarget.progressPercent > 0 && resumeTarget.progressPercent < 100
+                ? "Pick up where you left off"
+                : resumeTarget.progressPercent >= 100
+                  ? "Ready for a review"
+                  : "Your next topic"}
+            </p>
+            <h2 className="mt-1 text-lg font-semibold tracking-tight text-[var(--sp-text-strong)]">
+              {resumeTarget.number} {resumeTarget.title}
+            </h2>
+            <p className="mt-1 text-sm text-[var(--sp-muted)]">
+              {resumeTarget.subjectName} · {resumeTarget.chapterName}
+              {resumeTarget.progressPercent > 0 && resumeTarget.progressPercent < 100
+                ? ` · ${resumeTarget.progressPercent}% complete`
+                : ""}
+            </p>
+          </div>
+          <Link
+            href={ctx.sitePath(`student/learn/${resumeTarget.slug}`)}
+            onMouseEnter={() => warmTopic(resumeTarget.slug)}
+            onTouchStart={() => warmTopic(resumeTarget.slug)}
+            onFocus={() => warmTopic(resumeTarget.slug)}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            style={{ backgroundColor: ACCENT }}
+          >
+            {resumeTarget.progressPercent > 0 && resumeTarget.progressPercent < 100
+              ? "Continue topic"
+              : resumeTarget.progressPercent >= 100
+                ? "Review topic"
+                : "Start topic"}
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        </section>
+      ) : null}
 
       {/* Filters */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
