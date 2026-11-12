@@ -68,14 +68,6 @@ function returnedNotifId(homeworkId: string) {
   return `hw-returned-${homeworkId}`;
 }
 
-function continueLearningNotifId(cl: {
-  type: string;
-  title: string;
-  href: string;
-}) {
-  return `continue-learning:${cl.type}:${cl.href}`;
-}
-
 function schoolAnnouncementsNotifId(ids: string[]) {
   return `home-school-announcements:${[...ids].sort().join(",")}`;
 }
@@ -211,11 +203,8 @@ export function StudentHomePage({
     return returned.filter((hw) => !dismissed.has(returnedNotifId(hw.id)));
   }, [ctx.tenant, returned, dismissedTick]);
 
-  const showContinueLearning = useMemo(() => {
-    void dismissedTick;
-    const dismissed = getDismissedNotificationIds(ctx.tenant, "student");
-    return !dismissed.has(continueLearningNotifId(cl));
-  }, [ctx.tenant, cl, dismissedTick]);
+  // The primary next step stays visible; students should not be able to dismiss it.
+  const showContinueLearning = true;
 
   const schoolAnnouncementIds = useMemo(
     () => data.announcements.map((a) => a.id),
@@ -297,6 +286,54 @@ export function StudentHomePage({
           />
         </div>
       </header>
+
+      {/* The next best learning action comes before dashboard metrics. */}
+      {showContinueLearning ? (
+        <div
+          className="relative flex animate-[fadeSlideIn_0.4s_ease-out] flex-col gap-5 rounded-2xl border px-5 py-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-6"
+          style={
+            isUrgent
+              ? {
+                  backgroundColor: "var(--sp-danger-soft, #FEF2F2)",
+                  borderColor: "var(--sp-danger-border, #FECACA)",
+                }
+              : {
+                  backgroundColor: "var(--sp-accent-soft, #EFF6FF)",
+                  borderColor: "color-mix(in srgb, var(--sp-accent, #2563EB) 28%, white)",
+                }
+          }
+        >
+          <div className="flex min-w-0 gap-3">
+            <div
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"
+              style={{
+                color: isUrgent ? "var(--sp-danger, #DC2626)" : "var(--sp-accent, #2563EB)",
+              }}
+            >
+              <Crosshair className="h-5 w-5" strokeWidth={2.25} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--sp-muted)]">
+                {isUrgent ? "Priority for today" : "Continue learning"}
+              </p>
+              <p className="mt-1 text-base font-semibold text-[var(--sp-text-strong)]">{cl.title}</p>
+              <p className="mt-0.5 text-sm text-[var(--sp-text)]">{cl.subtitle}</p>
+              <p
+                className="mt-1 text-sm font-medium"
+                style={{ color: isUrgent ? "var(--sp-danger, #DC2626)" : "var(--sp-muted)" }}
+              >
+                {cl.meta}
+              </p>
+            </div>
+          </div>
+          <SeniorsLinkButton
+            href={ctx.sitePath(cl.href.replace(`/${ctx.tenant}/`, "").replace(/^\//, ""))}
+            variant={isUrgent ? "danger" : "primary"}
+          >
+            {cl.ctaLabel}
+          </SeniorsLinkButton>
+        </div>
+      ) : null}
 
       {/* Overview */}
       <section className="relative grid gap-4 lg:grid-cols-2">
@@ -487,56 +524,6 @@ export function StudentHomePage({
             variant="primary"
           >
             View feedback
-          </SeniorsLinkButton>
-        </div>
-      ) : null}
-
-      {showContinueLearning ? (
-        <div
-          className="relative flex animate-[fadeSlideIn_0.4s_ease-out] flex-col gap-4 rounded-xl border px-5 py-5 pr-11 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-          style={
-            isUrgent
-              ? {
-                  backgroundColor: "var(--sp-danger-soft, #FEF2F2)",
-                  borderColor: "var(--sp-danger-border, #FECACA)",
-                }
-              : {
-                  backgroundColor: "var(--sp-accent-soft, #EFF6FF)",
-                  borderColor: "color-mix(in srgb, var(--sp-accent, #2563EB) 28%, white)",
-                }
-          }
-        >
-          <DismissButton
-            label="Dismiss"
-            onClick={() => {
-              dismissSeniorsNotification(ctx.tenant, "student", continueLearningNotifId(cl));
-            }}
-          />
-          <div className="flex min-w-0 gap-3">
-            <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm"
-              style={{
-                color: isUrgent ? "var(--sp-danger, #DC2626)" : "var(--sp-accent, #2563EB)",
-              }}
-            >
-              <Crosshair className="h-5 w-5" strokeWidth={2.25} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-base font-semibold text-[var(--sp-text-strong)]">{cl.title}</p>
-              <p className="mt-0.5 text-sm text-[var(--sp-text)]">{cl.subtitle}</p>
-              <p
-                className="mt-1 text-sm font-medium"
-                style={{ color: isUrgent ? "var(--sp-danger, #DC2626)" : "var(--sp-muted)" }}
-              >
-                {cl.meta}
-              </p>
-            </div>
-          </div>
-          <SeniorsLinkButton
-            href={ctx.sitePath(cl.href.replace(`/${ctx.tenant}/`, "").replace(/^\//, ""))}
-            variant={isUrgent ? "danger" : "primary"}
-          >
-            {cl.ctaLabel}
           </SeniorsLinkButton>
         </div>
       ) : null}
