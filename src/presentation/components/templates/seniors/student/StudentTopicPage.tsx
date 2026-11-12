@@ -620,57 +620,68 @@ export function StudentTopicPage({
         ? [topic.quiz]
         : [];
 
-  const recommendedStep: {
+  type LessonStep = {
     tab: TopicTabId;
     eyebrow: string;
     title: string;
     description: string;
     action: string;
     detail: string;
-  } = notes.length > 0
-    ? {
-        tab: "notes",
-        eyebrow: "Recommended next step",
-        title: "Read your teacher's notes",
-        description: "Build your understanding with the material shared for this topic.",
-        action: "Open notes",
-        detail: `${notes.length} resource${notes.length === 1 ? "" : "s"} available`,
-      }
-    : practice.length > 0 || topic.homework.length > 0
-      ? {
-          tab: "practice",
-          eyebrow: "Recommended next step",
-          title: "Put the idea into practice",
-          description: "Work through the practice material or homework linked to this topic.",
-          action: "Start practice",
-          detail: `${practice.length + topic.homework.length} item${practice.length + topic.homework.length === 1 ? "" : "s"} available`,
-        }
-      : revision.length > 0
-        ? {
-            tab: "revision",
-            eyebrow: "Recommended next step",
-            title: "Review the key points",
-            description: "Use the revision material to reinforce what you have learned.",
-            action: "Open revision",
-            detail: `${revision.length} resource${revision.length === 1 ? "" : "s"} available`,
-          }
-        : topicQuizzes.some((quiz) => quiz.questions?.length > 0)
-          ? {
-              tab: "quiz",
-              eyebrow: "Check your understanding",
-              title: "Try the topic quiz",
-              description: "See what you have understood and identify anything to revisit.",
-              action: "Start quiz",
-              detail: `${topicQuizzes.length} quiz${topicQuizzes.length === 1 ? "" : "zes"} available`,
-            }
-          : {
-              tab: "need-help",
-              eyebrow: "Need a hand?",
-              title: "Ask a doubt about this topic",
-              description: "Get help with a concept or a step that is not clear yet.",
-              action: "Ask a doubt",
-              detail: "Topic-aware help",
-            };
+  };
+
+  const lessonSteps: LessonStep[] = [];
+  if (notes.length > 0) {
+    lessonSteps.push({
+      tab: "notes",
+      eyebrow: "Recommended next step",
+      title: "Read your teacher's notes",
+      description: "Build your understanding with the material shared for this topic.",
+      action: "Open notes",
+      detail: `${notes.length} resource${notes.length === 1 ? "" : "s"} available`,
+    });
+  }
+  if (practice.length > 0 || topic.homework.length > 0) {
+    lessonSteps.push({
+      tab: "practice",
+      eyebrow: "Recommended next step",
+      title: "Put the idea into practice",
+      description: "Work through the practice material or homework linked to this topic.",
+      action: "Start practice",
+      detail: `${practice.length + topic.homework.length} item${practice.length + topic.homework.length === 1 ? "" : "s"} available`,
+    });
+  }
+  if (revision.length > 0) {
+    lessonSteps.push({
+      tab: "revision",
+      eyebrow: "Recommended next step",
+      title: "Review the key points",
+      description: "Use the revision material to reinforce what you have learned.",
+      action: "Open revision",
+      detail: `${revision.length} resource${revision.length === 1 ? "" : "s"} available`,
+    });
+  }
+  if (topicQuizzes.some((quiz) => quiz.questions?.length > 0)) {
+    lessonSteps.push({
+      tab: "quiz",
+      eyebrow: "Check your understanding",
+      title: "Try the topic quiz",
+      description: "See what you have understood and identify anything to revisit.",
+      action: "Start quiz",
+      detail: `${topicQuizzes.length} quiz${topicQuizzes.length === 1 ? "" : "zes"} available`,
+    });
+  }
+  lessonSteps.push({
+    tab: "need-help",
+    eyebrow: "Need a hand?",
+    title: "Ask a doubt about this topic",
+    description: "Get help with a concept or a step that is not clear yet.",
+    action: "Ask a doubt",
+    detail: "Topic-aware help",
+  });
+
+  const recommendedStep =
+    lessonSteps.find((step) => !visitedTabsRef.current.has(step.tab)) ??
+    lessonSteps[0];
 
   const progressMilestones = useMemo(
     () =>
