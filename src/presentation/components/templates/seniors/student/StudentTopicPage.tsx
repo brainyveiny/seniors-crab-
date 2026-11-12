@@ -620,6 +620,58 @@ export function StudentTopicPage({
         ? [topic.quiz]
         : [];
 
+  const recommendedStep: {
+    tab: TopicTabId;
+    eyebrow: string;
+    title: string;
+    description: string;
+    action: string;
+    detail: string;
+  } = notes.length > 0
+    ? {
+        tab: "notes",
+        eyebrow: "Recommended next step",
+        title: "Read your teacher's notes",
+        description: "Build your understanding with the material shared for this topic.",
+        action: "Open notes",
+        detail: `${notes.length} resource${notes.length === 1 ? "" : "s"} available`,
+      }
+    : practice.length > 0 || topic.homework.length > 0
+      ? {
+          tab: "practice",
+          eyebrow: "Recommended next step",
+          title: "Put the idea into practice",
+          description: "Work through the practice material or homework linked to this topic.",
+          action: "Start practice",
+          detail: `${practice.length + topic.homework.length} item${practice.length + topic.homework.length === 1 ? "" : "s"} available`,
+        }
+      : revision.length > 0
+        ? {
+            tab: "revision",
+            eyebrow: "Recommended next step",
+            title: "Review the key points",
+            description: "Use the revision material to reinforce what you have learned.",
+            action: "Open revision",
+            detail: `${revision.length} resource${revision.length === 1 ? "" : "s"} available`,
+          }
+        : topicQuizzes.some((quiz) => quiz.questions?.length > 0)
+          ? {
+              tab: "quiz",
+              eyebrow: "Check your understanding",
+              title: "Try the topic quiz",
+              description: "See what you have understood and identify anything to revisit.",
+              action: "Start quiz",
+              detail: `${topicQuizzes.length} quiz${topicQuizzes.length === 1 ? "" : "zes"} available`,
+            }
+          : {
+              tab: "need-help",
+              eyebrow: "Need a hand?",
+              title: "Ask a doubt about this topic",
+              description: "Get help with a concept or a step that is not clear yet.",
+              action: "Ask a doubt",
+              detail: "Topic-aware help",
+            };
+
   const progressMilestones = useMemo(
     () =>
       buildTopicProgressMilestones({
@@ -911,6 +963,34 @@ export function StudentTopicPage({
                 ))}
               </div>
             </StudentLiftCard>
+          ) : null}
+
+          {mode === "student" ? (
+            <section className="flex flex-col gap-4 rounded-2xl border border-[var(--sp-border)] bg-[var(--sp-surface)] p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--sp-muted)]">
+                  {recommendedStep.eyebrow}
+                </p>
+                <h2 className="mt-1 text-lg font-semibold tracking-tight text-[var(--sp-text-strong)]">
+                  {recommendedStep.title}
+                </h2>
+                <p className="mt-1 text-sm leading-relaxed text-[var(--sp-muted)]">
+                  {recommendedStep.description}
+                </p>
+                <p className="mt-2 text-xs font-medium text-[var(--sp-muted)]">
+                  {recommendedStep.detail}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTab(recommendedStep.tab)}
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{ backgroundColor: "var(--sp-accent, #18181B)" }}
+              >
+                {recommendedStep.action}
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </section>
           ) : null}
         </div>
       ) : null}
